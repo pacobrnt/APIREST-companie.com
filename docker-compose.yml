@@ -27,5 +27,15 @@ services:
       db:
         condition: service_healthy
 
+  stats:
+    build: ./stats
+    ports:
+      - "8000:8000"
+    environment:
+      DB_URL: postgresql://sirene:sirene@db:5432/sirene
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:
