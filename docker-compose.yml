@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sirene
+      POSTGRES_USER: sirene
+      POSTGRES_PASSWORD: sirene
+    volumes:
+      - ./StockUniteLegale_100000_utf8.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # -h localhost : le serveur temporaire d'initialisation n'écoute pas en TCP,
+      # donc la base n'est "healthy" qu'une fois le jeu de données importé
+      test: ["CMD", "pg_isready", "-h", "localhost", "-U", "sirene", "-d", "sirene"]
+      interval: 5s
+      retries: 60
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sirene
+      DB_USER: sirene
+      DB_PASSWORD: sirene
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
