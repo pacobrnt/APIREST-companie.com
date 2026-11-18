@@ -1,0 +1,49 @@
+{
+  "realm": "sirene",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 900,
+
+  "roles": {
+    "realm": [
+      { "name": "lecteur", "description": "Peut consulter les entreprises et les statistiques" },
+      { "name": "admin", "description": "Peut aussi modifier et supprimer des entreprises" }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "sirene-client",
+      "name": "Client de l'API Sirene",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:8080/*", "http://localhost:8000/*"],
+      "webOrigins": ["+"]
+    }
+  ],
+
+  "users": [
+    {
+      "username": "lecteur",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Lea",
+      "lastName": "Lecteur",
+      "email": "lecteur@sirene.local",
+      "credentials": [{ "type": "password", "value": "lecteur", "temporary": false }],
+      "realmRoles": ["lecteur"]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alex",
+      "lastName": "Admin",
+      "email": "admin@sirene.local",
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["lecteur", "admin"]
+    }
+  ]
+}

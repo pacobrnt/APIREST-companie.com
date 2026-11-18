@@ -2,12 +2,17 @@ import os
 
 import polars as pl
 import psycopg
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+
+from auth import exiger_role
 
 DB_URL = os.getenv("DB_URL", "postgresql://sirene:sirene@localhost:5432/sirene")
 
+# dependencies=... : toutes les routes /stats exigent un jeton Keycloak avec le rôle lecteur ou admin.
+# /docs et /openapi.json restent publics.
 app = FastAPI(title="API Statistiques Sirene",
-              description="Statistiques sur les codes activité, calculées avec Polars")
+              description="Statistiques sur les codes activité, calculées avec Polars",
+              dependencies=[Depends(exiger_role("lecteur", "admin"))])
 
 
 def charger_entreprises() -> pl.DataFrame:

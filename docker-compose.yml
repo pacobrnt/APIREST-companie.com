@@ -23,9 +23,15 @@ services:
       DB_URL: jdbc:postgresql://db:5432/sirene
       DB_USER: sirene
       DB_PASSWORD: sirene
+      # Clés publiques : récupérées par le réseau Docker interne (nom de service "keycloak")
+      JWK_SET_URI: http://keycloak:8080/realms/sirene/protocol/openid-connect/certs
+      # Émetteur attendu : doit correspondre au "iss" écrit par Keycloak (voir KC_HOSTNAME)
+      ISSUER_URI: ${KC_HOSTNAME:-http://localhost:8180}/realms/sirene
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
 
   stats:
     build: ./stats
@@ -33,9 +39,30 @@ services:
       - "8000:8000"
     environment:
       DB_URL: postgresql://sirene:sirene@db:5432/sirene
+      JWK_SET_URI: http://keycloak:8080/realms/sirene/protocol/openid-connect/certs
+      ISSUER_URI: ${KC_HOSTNAME:-http://localhost:8180}/realms/sirene
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    # start-dev : HTTP sans certificat + base interne (H2), suffisant pour le TP
+    # --import-realm : crée le realm à partir des fichiers de /opt/keycloak/data/import
+    command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    environment:
+      # Compte de la console d'administration (realm "master")
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # URL publique de Keycloak : c'est elle qui sera écrite dans le champ "iss" des jetons.
+      # Sur le réseau St-Michel : KC_HOSTNAME=http://<ip-de-la-machine>:8180 dans un fichier .env
+      KC_HOSTNAME: ${KC_HOSTNAME:-http://localhost:8180}
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
 
 volumes:
   db-data:
