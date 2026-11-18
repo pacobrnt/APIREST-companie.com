@@ -51,7 +51,18 @@ services:
     image: quay.io/keycloak/keycloak:26.0.7
     # start-dev : HTTP sans certificat + base interne (H2), suffisant pour le TP
     # --import-realm : crée le realm à partir des fichiers de /opt/keycloak/data/import
-    command: start-dev --import-realm
+    # Puis, une fois démarré : autorise le HTTP sur le realm "master" (console d'administration),
+    # qui ne peut pas être importé depuis un fichier comme le realm "sirene".
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        /opt/keycloak/bin/kc.sh start-dev --import-realm &
+        PID=$$!
+        trap 'kill -TERM $$PID; wait $$PID' TERM INT
+        until /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master \
+              --user "$$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$$KC_BOOTSTRAP_ADMIN_PASSWORD" >/dev/null 2>&1; do sleep 2; done
+        /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE && echo "realm master : HTTP autorisé"
+        wait $$PID
     ports:
       - "8180:8080"
     environment:
